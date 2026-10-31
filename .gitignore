@@ -1,0 +1,25 @@
+.DS_Store
+Thumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Editors and temporary files
+.vscode/
+.idea/
+*.log
+.ipynb_checkpoints/
+
+# Local datasets (keep directory placeholders)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Generated outputs and model artifacts
+outputs/
+artifacts/

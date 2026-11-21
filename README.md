@@ -3,26 +3,29 @@
 반사율 스펙트럼 226점을 보고 4층 박막의 두께 4개를 맞힌다. 신경망이 두께를 먼저 추정하고, 박막 광학 공식(TMM, 전달 행렬법)으로 계산한 곡선을 실제 곡선에 맞춰 두께를 다듬는다.
 
 - 데이터: DACON 박막 두께 데이터 `train.csv`만 사용한다. 정답이 없는 `test.csv`는 쓰지 않는다.
-- 결과는 모두 `train.csv`를 나눈 **모의고사(mock) 세트** 기준이다. 최종 평가 세트(`test_final`)는 아직 열지 않았다.
+- 결과는 `train.csv`를 나눈 고정 평가 세트 기준이다. 방법은 **모의고사(mock)** 세트로 골랐고, 최종 평가 세트(`test_final`)는 마지막에 **한 번만** 열었다.
 - 데이터가 시뮬레이션일 가능성이 높아서, 실제 웨이퍼에서의 성능을 뜻하지는 않는다.
 - 자세한 작업 기록과 숫자의 근거는 [HANDOFF.md](HANDOFF.md)에 있다.
 
 ## 1. 결과 요약
 
-mock_refine 1만 개 (학습 때 보지 않은 두께 조합), CPU 기준.
+**최종 평가 test_final 2만 개** (학습 때 보지 않은 두께 조합, 한 번만 평가), CPU 기준.
 
-| 구성 | 신경망만 MAE | 최종 MAE | 중앙값 | 20 nm 넘게 틀림 | 판정 실패 | 샘플당 |
-|---|---|---|---|---|---|---|
-| **A + B 후보를 정련 출발점으로 (추천)** | 5.15 nm | **0.285 nm** | 0.178 nm | **0개** | 0 | 315 ms |
-| B 후보 4개 전부 | 4.99 nm | 0.285 nm | 0.178 nm | 0개 | 0 | 381 ms |
-| A만 (기준선) | 5.15 nm | 0.295 nm | 0.178 nm | 2개 | 0 | 119 ms |
-| 보정 신경망 | **1.33 nm** | 0.295 nm | 0.178 nm | 3개 | 0 | 118 ms |
-| 보정 신경망, 빠른 경로 | 1.33 nm | 0.406 nm | 0.268 nm | 3개 | 0 | **86 ms** |
+| 구성 | 신경망만 MAE | 최종 MAE | 중앙값 | 20 nm 넘게 틀림 | 곡선은 맞는 오답 | 샘플당 | (참고) mock 최종 |
+|---|---|---|---|---|---|---|---|
+| **A + B 후보를 정련 출발점으로 (최종)** | 5.12 nm | **0.281 nm** | 0.176 nm | **0개** | **26개** | 316 ms | 0.285 nm |
+| A만 (기준선) | 5.12 nm | 0.306 nm | 0.176 nm | 18개 | 52개 | 141 ms | 0.295 nm |
+| 보정 신경망 | **1.32 nm** | 0.298 nm | 0.176 nm | 16개 | 45개 | 142 ms | 0.295 nm |
 
 - A = 1D ResNet (`s3_resnet`), B = 두께 후보 4개를 내는 1D ResNet (`s3_resnet_k4h`).
-- **최종 정확도는 물리 정련이 정한다.** 신경망 단독 오차가 1.3~5.2 nm로 4배 차이 나도 TMM 정련 후에는 0.29 nm 안팎으로 모인다.
-- 학습 격자에 없던 두께가 1~4층 섞여 있어도 최종 MAE는 0.28~0.30 nm로 거의 같다.
-- 차이는 얇은 스택(총두께 400 nm 미만)에서만 난다: 추천 구성 0.549 nm, A만 0.630 nm. 두꺼운 스택(800 nm 이상)은 모든 구성이 0.158 nm다.
+- **최종 정확도는 물리 정련이 정한다.** 신경망 단독 오차가 1.3~5.1 nm로 4배 차이 나도 TMM 정련 후에는 0.28~0.31 nm로 모인다. 중앙값은 세 구성이 같다.
+- **모의고사와 최종 시험이 같다.** mock → test_final 차이가 0.01 nm 이내라 모델 선택 과정에서 과적합되지 않았다.
+- 학습 격자에 없던 두께가 1~4층 섞여 있어도 최종 MAE는 0.27~0.29 nm로 거의 같다(A+B).
+- 차이는 얇은 스택과 크게 틀리는 소수 샘플에서만 난다. 총두께 400 nm 미만: A+B 0.525 nm, A만 0.725 nm. 800 nm 이상은 모든 구성이 0.154 nm다.
+- 층별 최종 MAE는 0.204 / 0.363 / 0.268 / 0.289 nm. L2(SiO₂)가 가장 어려운 것은 이론 한계(CRLB)의 비율과 같다.
+- 발표용 그래프는 [`figures/`](figures/) (`python make_figures.py`), 팀원 결과와 묶은 분석은 [TEAM_ANALYSIS.md](TEAM_ANALYSIS.md).
+
+![방법별 오차](figures/fig1_team_ladder.png)
 
 ## 2. 문제와 물리 모델
 
@@ -72,7 +75,7 @@ TMM은 두 곳에서 쓴다. 하나는 학습 데이터 증강이고, 다른 하
 | practice | 3,954 | 실패 분석 |
 | mock_nn | 51,712 | 신경망만 비교 |
 | mock_refine | 10,000 | 정련 포함 비교 |
-| test_final | 20,000 | 최종 평가 (미사용) |
+| test_final | 20,000 | 최종 평가 (한 번 사용, 1장) |
 
 ## 5. 실험 경과
 
@@ -104,10 +107,12 @@ TMM은 두 곳에서 쓴다. 하나는 학습 데이터 증강이고, 다른 하
 | `compare_nn.py` | 신경망만 비교 → `_work/diag/<out>.json` |
 | `diag_*.py` | 기준선, 노이즈, 곡선은 맞는 오답 분석 |
 | `run_*.ps1` | 실제로 돌린 실행 기록 |
+| `make_figures.py` | 발표용 그래프 9장 → `figures/` |
+| `TEAM_ANALYSIS.md` | 팀원 4명 결과 통합·교차 분석 (`_work/diag/team_crosscheck.py`) |
 
 저장소에 들어 있는 결과물:
 - 모델 가중치: `_work/runs/s3_resnet`, `s3_resnet_k4h`, `s4_corr`의 `best.pt`. 다른 모델은 학습 기록(`log.json`)만 있다.
-- 평가 결과: `_work/eval_*.json`, `_work/diag/*.json`.
+- 평가 결과: `_work/eval_*.json`(mock_refine, valid, test_final), `_work/runs/eval_tf_*.log`, `_work/diag/*.json`.
 - 분할·평가 세트 인덱스: `split.npz`, `eval_sets.npz`.
 
 ## 7. 재현
@@ -131,6 +136,14 @@ python 06_train_corrector.py --base s3_resnet --name s4_corr
 python 05_eval.py --runs s3_resnet --extra-run s3_resnet_k4h --all-cands --tag s4_a_plus_b
 python 05_eval.py --runs s4_corr --fast --tag s4_corr
 python compare_nn.py s3_resnet s3_resnet_k4h s4_corr --out compare_s4
+
+# 최종 평가 (test_final 2만 개, 모델을 정한 뒤 한 번만. A+B 약 1.8시간)
+python 05_eval.py --runs s3_resnet --extra-run s3_resnet_k4h --all-cands --set test_final --tag tf_a_plus_b
+python 05_eval.py --runs s3_resnet --fast --set test_final --tag tf_a_base
+python 05_eval.py --runs s4_corr --fast --set test_final --tag tf_s4_corr
+
+# 그래프
+python make_figures.py
 ```
 
 `--mode fno`는 "두께 점수만 쓰는 학습"이라는 뜻이고 모델 종류(`--arch`)와는 상관없다. 예전 명령과 호환하려고 이름을 남겨 두었다.

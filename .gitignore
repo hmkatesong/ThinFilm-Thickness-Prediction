@@ -15,11 +15,13 @@ _work/*
 !_work/eval_mock_refine_10000_*.json
 !_work/eval_valid_1000.json
 !_work/eval_valid_3000.json
+!_work/eval_test_final_20000_tf_*.json
 
 # 학습 결과: 최종 모델 3개는 가중치까지, 나머지는 학습 기록만
 !_work/runs/
 _work/runs/*
 !_work/runs/*_r2.log
+!_work/runs/eval_tf_*.log
 !_work/runs/s3_resnet/
 !_work/runs/s3_resnet_k4h/
 !_work/runs/s4_corr/

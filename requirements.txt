@@ -1,0 +1,8 @@
+# 결과를 낸 버전 (Python 3.13.9, Windows, CPU 8코어). lightgbm 4.x에서도 돌 것으로 보지만 숫자가 같은지는 확인하지 않았다.
+numpy==2.3.5
+pandas==2.3.3
+scipy==1.16.3
+scikit-learn==1.7.2
+lightgbm==3.3.5
+matplotlib==3.10.6
+pytest==8.4.2

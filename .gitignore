@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+
+# 원본 데이터 (DACON, 상위 폴더) - 올리지 않음
+*.csv
+!_work/optical_params.csv
+
+# _work: 필요한 결과만 화이트리스트로 올린다
+# grid.npy(0.7GB)는 01_cache_grid.py로 다시 만든다
+_work/*
+!_work/optical_params.csv
+!_work/split.npz
+!_work/eval_sets.npz
+!_work/eval_mock_refine_10000_*.json
+!_work/eval_valid_1000.json
+!_work/eval_valid_3000.json
+
+# 학습 결과: 최종 모델 3개는 가중치까지, 나머지는 학습 기록만
+!_work/runs/
+_work/runs/*
+!_work/runs/*_r2.log
+!_work/runs/s3_resnet/
+!_work/runs/s3_resnet_k4h/
+!_work/runs/s4_corr/
+!_work/runs/s2_*/
+_work/runs/s2_*/best.pt
+!_work/runs/fno/
+!_work/runs/fno_synth/
+!_work/runs/fno_tmm/
+_work/runs/fno*/best.pt
+
+# 진단: json·스크립트·메모만 (예전 로그는 인코딩이 깨져 제외)
+!_work/diag/
+_work/diag/*
+!_work/diag/*.json
+!_work/diag/*.py
+!_work/diag/MONITOR_S3.md
+_work/diag/smoke.json
+_work/diag/wrong_s3_resnet.json

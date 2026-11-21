@@ -1,0 +1,49 @@
+{
+ "set": "valid",
+ "n": 3000,
+ "seed": 11,
+ "results": {
+  "fno_synth": {
+   "model": {
+    "mae": [
+     7.553,
+     11.709,
+     9.995,
+     9.526
+    ],
+    "mae_avg": 9.696,
+    "median": 6.436,
+    "over20": 0.2813
+   },
+   "lm": {
+    "mae": [
+     1.741,
+     3.669,
+     2.731,
+     2.592
+    ],
+    "mae_avg": 2.683,
+    "median": 0.185,
+    "over20": 0.0597,
+    "converged": 0.9387,
+    "mae_converged": 0.274,
+    "n_failed": 184
+   },
+   "multistart": {
+    "mae": [
+     0.275,
+     0.52,
+     0.311,
+     0.3
+    ],
+    "mae_avg": 0.352,
+    "median": 0.172,
+    "over20": 0.0013,
+    "converged": 0.998,
+    "mae_converged": 0.279,
+    "n_failed": 6
+   },
+   "time_s": 701.3
+  }
+ }
+}
